@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" x2="100%" y1="100%" y2="0%">
+      <stop offset="0%" stop-color="#452e72"/>
+      <stop offset="100%" stop-color="#8550fc"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full canvas background -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- Top tile (512x256): Coolify mark (352x352 viewBox) scaled to 192x192, centered -->
+  <g transform="translate(160,32) scale(0.545454)">
+    <path fill="#fff" d="M63.996 64V0h256v64Zm0 192h-64V64h64Zm0 0h256v64h-256Zm32-160V71.067h231.066V32h24.934v64zm0 0v152.533H71.063V96ZM56.93 263.066V288H31.997v-24.934ZM351.996 352h-256v-24.934h231.066V288h24.934z"/>
+  </g>
+
+  <!-- Thin horizontal divider -->
+  <line x1="64" y1="256" x2="448" y2="256" stroke="#ffffff" stroke-opacity="0.25" stroke-width="2"/>
+
+  <!-- Bottom tile (512x256): remote servers (24x24 viewBox) scaled x8 to 192x192, centered -->
+  <g transform="translate(160,288) scale(8)">
+    <path fill="#fff" d="M4 3h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v3h14V5H5zm1 1h2v1H6V6zm-2 8h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1zm1 2v3h14v-3H5zm1 1h2v1H6v-1zm10.5-9.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+  </g>
+</svg>

@@ -1,0 +1,17 @@
+{
+  "name": "coolify-railway-template",
+  "private": true,
+  "description": "Railway Infrastructure as Code for the Coolify control plane",
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "plan": "railway config plan",
+    "apply": "railway config apply"
+  },
+  "dependencies": {
+    "railway": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1"
+  }
+}

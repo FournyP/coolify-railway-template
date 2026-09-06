@@ -1,0 +1,97 @@
+# Coolify's site config (verbatim from upstream's site-opts.d/http.conf) plus the
+# two websocket locations upstream routes with Traefik instead:
+# /app -> realtime:6001, /terminal/ws -> realtime:6002.
+#
+# Same paths on the same host means PUSHER_HOST / PUSHER_PORT / TERMINAL_* stay
+# unset and the frontend falls back to wss://<this host>/app on its own.
+#
+# Rendered by /etc/entrypoint.d/05-railway-realtime-proxy.sh. Only
+# ${NGINX_RESOLVER} and ${REALTIME_HOST} are substituted; every other $var is an
+# nginx runtime variable and must survive envsubst.
+
+listen 8080 default_server;
+listen [::]:8080 default_server;
+
+root /var/www/html/public;
+
+# Set allowed "index" files
+index index.html index.htm index.php;
+
+server_name _;
+
+charset utf-8;
+
+# Set max upload to 2048M
+client_max_body_size 2048M;
+
+# Set client body buffer to handle Sentinel payloads in memory
+client_body_buffer_size 256k;
+
+# Healthchecks: Set /healthcheck to be the healthcheck URL
+location /healthcheck {
+    access_log off;
+
+    # set max 5 seconds for healthcheck
+    fastcgi_read_timeout 5s;
+
+    include        fastcgi_params;
+    fastcgi_param  SCRIPT_NAME     /healthcheck;
+    fastcgi_param  SCRIPT_FILENAME /healthcheck;
+    fastcgi_pass   127.0.0.1:9000;
+}
+
+# Soketi websocket (Laravel Echo).
+location /app {
+    # A variable upstream forces re-resolution; a literal would cache the
+    # private IPv6 at startup and break when realtime redeploys.
+    resolver ${NGINX_RESOLVER} valid=10s ipv6=on;
+    set $realtime_upstream "${REALTIME_HOST}";
+    proxy_pass http://$realtime_upstream:6001;
+
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    proxy_buffering off;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+}
+
+# Browser terminal websocket.
+location /terminal/ws {
+    resolver ${NGINX_RESOLVER} valid=10s ipv6=on;
+    set $terminal_upstream "${REALTIME_HOST}";
+    proxy_pass http://$terminal_upstream:6002;
+
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    proxy_buffering off;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+}
+
+# Have NGINX try searching for PHP files as well
+location / {
+    try_files $uri $uri/ /index.php?$query_string;
+}
+
+# Pass "*.php" files to PHP-FPM
+location ~ \.php$ {
+    fastcgi_pass   127.0.0.1:9000;
+    fastcgi_index  index.php;
+    fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+    include        fastcgi_params;
+    fastcgi_buffers 16 16k;
+    fastcgi_buffer_size 32k;
+    fastcgi_read_timeout 99;
+}

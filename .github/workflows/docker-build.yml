@@ -1,0 +1,140 @@
+# Builds both images and exercises the websocket routing.
+name: docker-build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [coolify, realtime]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build ${{ matrix.image }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.image }}
+          push: false
+          load: false
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+  # The nginx config is rendered at container start, so a broken template passes
+  # the image build and only fails on Railway. Boot the real stack and assert
+  # both websocket paths reach realtime instead of falling through to PHP.
+  websocket-routing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build coolify image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: coolify
+          push: false
+          load: true
+          tags: coolify:ci
+          cache-from: type=gha,scope=coolify
+
+      - name: Build realtime image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: realtime
+          push: false
+          load: true
+          tags: realtime:ci
+          cache-from: type=gha,scope=realtime
+
+      - name: Start the stack
+        run: |
+          set -eu
+          docker network create ci-net
+
+          docker run -d --name postgres --network ci-net \
+            -e POSTGRES_USER=coolify -e POSTGRES_PASSWORD=cipassword -e POSTGRES_DB=coolify \
+            postgres:15-alpine
+          docker run -d --name redis --network ci-net \
+            redis:7-alpine redis-server --requirepass ciredis
+          docker run -d --name realtime --network ci-net \
+            -e SOKETI_DEFAULT_APP_ID=ciappid \
+            -e SOKETI_DEFAULT_APP_KEY=ciappkey \
+            -e SOKETI_DEFAULT_APP_SECRET=ciappsecret \
+            realtime:ci
+
+          for i in $(seq 1 60); do
+            docker exec postgres pg_isready -U coolify -d coolify >/dev/null 2>&1 && break
+            sleep 2
+          done
+
+          docker run -d --name coolify --network ci-net -p 8080:8080 \
+            -e APP_ENV=production \
+            -e APP_DEBUG=false \
+            -e APP_KEY=base64:sJp3vQ2xN7kL9mR4tW8yB1cF6hJ0dG5aZ3nQ7uX2eV4= \
+            -e APP_URL=http://localhost:8080 \
+            -e DB_HOST=postgres -e DB_PORT=5432 -e DB_DATABASE=coolify \
+            -e DB_USERNAME=coolify -e DB_PASSWORD=cipassword \
+            -e REDIS_HOST=redis -e REDIS_PORT=6379 -e REDIS_PASSWORD=ciredis \
+            -e PUSHER_APP_ID=ciappid -e PUSHER_APP_KEY=ciappkey -e PUSHER_APP_SECRET=ciappsecret \
+            -e PUSHER_BACKEND_HOST=realtime -e PUSHER_BACKEND_PORT=6001 -e PUSHER_SCHEME=http \
+            -e REALTIME_HOST=realtime \
+            -e AUTOUPDATE=false \
+            coolify:ci
+
+          for i in $(seq 1 90); do
+            curl -fsS http://localhost:8080/api/health >/dev/null 2>&1 && break
+            sleep 2
+          done
+          curl -fsS http://localhost:8080/api/health >/dev/null
+
+      - name: nginx config is valid
+        run: docker exec coolify nginx -t
+
+      - name: Assertions
+        run: |
+          set -eu
+
+          echo "the realtime hostname and a resolver were substituted"
+          docker exec coolify nginx -T 2>/dev/null | grep -qF 'set $realtime_upstream "realtime";'
+          docker exec coolify nginx -T 2>/dev/null | grep -qE 'resolver [^ ]+ valid=10s ipv6=on;'
+
+          echo "nginx runtime variables survived envsubst"
+          docker exec coolify nginx -T 2>/dev/null | grep -qF 'proxy_set_header Upgrade $http_upgrade;'
+
+          echo "soketi binds dual-stack, not 0.0.0.0"
+          docker exec realtime sh -c 'netstat -ltn' | grep -q ':::6001'
+
+          echo "/app upgrades to a websocket served by soketi"
+          curl -sS -i -N --max-time 8 \
+            -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+            -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+            'http://localhost:8080/app/ciappkey?protocol=7&client=js&version=8.4.0' \
+            > /tmp/app-ws.txt 2>/dev/null || true
+          # -a: the response carries a binary websocket frame.
+          grep -qa '101 Switching Protocols' /tmp/app-ws.txt
+          grep -qa 'pusher:connection_established' /tmp/app-ws.txt
+
+          echo "/terminal/ws reaches the terminal server, not PHP"
+          # The terminal server itself rejecting an unauthenticated upgrade.
+          curl -sS --max-time 8 \
+            -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+            -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+            http://localhost:8080/terminal/ws | grep -qF 'Missing required tokens'
+
+          echo "the dashboard is still served by PHP"
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/login)" = 200 ]
+
+      - name: Logs on failure
+        if: failure()
+        run: |
+          docker logs coolify || true
+          docker logs realtime || true
