@@ -154,9 +154,11 @@ This instance holds the SSH keys to every server you register, behind one passwo
 - Back up Postgres — it is the only copy of your keys and settings.
 - Losing `APP_KEY` makes every stored private key undecryptable.
 
-## 🔁 Upgrades
+## ⬆️ Upgrading
 
-Bump `COOLIFY_VERSION` in `coolify/Dockerfile` (and `REALTIME_VERSION` to the matching `realtime` value in [versions.json](https://cdn.coollabs.io/coolify/versions.json)) and redeploy. Migrations run at boot. Only released versions get a bare semver tag on Docker Hub.
+Railway template updates are opt-in — an existing deployment keeps running until you apply the update. See the [changelog](CHANGELOG.md) for what each update contains.
+
+To move to a newer Coolify, bump `COOLIFY_VERSION` in `coolify/Dockerfile` (and `REALTIME_VERSION` to the matching `realtime` value in [versions.json](https://cdn.coollabs.io/coolify/versions.json)) and redeploy. Migrations run at boot. Only released versions get a bare semver tag on Docker Hub.
 
 ## 🧪 Run locally
 
