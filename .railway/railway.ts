@@ -23,8 +23,8 @@ import {
 
 const REPO = "FournyP/coolify-railway-template";
 
-// IaC matches resources by name. A mismatch is planned as delete + recreate of
-// a live service, not as a rename, so keep these identical to Railway.
+// Matched by name, so keep these identical to Railway: a mismatch is a
+// delete and recreate, not a rename.
 const COOLIFY_SERVICE = "Coolify";
 const REALTIME_SERVICE = "Coolify Realtime";
 
@@ -42,8 +42,7 @@ export default defineRailway(() => {
   const cache = redis("redis");
 
   const realtime = service(REALTIME_SERVICE, {
-    // One build context per service: at the repository root the builder would
-    // look for ./Dockerfile and the COPY paths would not resolve.
+    // Each service builds from its own directory; there is no root Dockerfile.
     source: github(REPO, { branch: "main", rootDirectory: "realtime" }),
     build: { builder: "DOCKERFILE", dockerfilePath: "Dockerfile" },
     deploy: { numReplicas: 1 },

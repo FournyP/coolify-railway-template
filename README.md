@@ -75,7 +75,8 @@ export PUSHER_APP_KEY=$(openssl rand -hex 16)
 export PUSHER_APP_SECRET=$(openssl rand -hex 16)
 export ROOT_USERNAME="Your Name" ROOT_USER_EMAIL="you@resolvable.tld" ROOT_USER_PASSWORD='...'
 
-npm run plan && npm run apply
+npm run plan     # read the diff before applying
+npm run apply
 railway domain --service Coolify
 ```
 
