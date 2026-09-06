@@ -54,9 +54,9 @@ Strings like `docker run -v /var/run/docker.sock:/var/run/docker.sock ...` in th
 ## 💁‍♀️ How to use
 
 1. Click **Deploy on Railway**.
-2. Fill in `ROOT_USERNAME`, `ROOT_USER_EMAIL`, `ROOT_USER_PASSWORD` — read the constraints in the table below first, an invalid value means no account is created.
-3. Deploy. First boot runs migrations and seeders; a couple of restarts while Postgres and Redis come up is normal.
-4. Log in, then set the instance FQDN in **Settings** to your Railway domain.
+2. Deploy. First boot runs migrations and seeders; a couple of restarts while Postgres and Redis come up is normal.
+3. Open the public domain and create the root account. **Do this as soon as the deploy goes live** — registration is open until the first account exists, and that account owns the instance.
+4. Set the instance FQDN in **Settings** to your Railway domain.
 5. **Keys & Tokens** → add your SSH key, **Servers** → add the server, validate it.
 6. Deploy a project. The build runs on your server, not on Railway.
 
@@ -73,7 +73,6 @@ export APP_KEY="base64:$(openssl rand -base64 32)"
 export PUSHER_APP_ID=$(openssl rand -hex 16)
 export PUSHER_APP_KEY=$(openssl rand -hex 16)
 export PUSHER_APP_SECRET=$(openssl rand -hex 16)
-export ROOT_USERNAME="Your Name" ROOT_USER_EMAIL="you@resolvable.tld" ROOT_USER_PASSWORD='...'
 
 npm run plan     # read the diff before applying
 npm run apply
@@ -98,9 +97,6 @@ Three things `railway.ts` deliberately leaves alone, all because the CLI does no
 | --- | --- | --- |
 | `APP_KEY` | yes | `base64:$(openssl rand -base64 32)`. **Never change it** — it encrypts every registered server's SSH key. |
 | `APP_URL` | yes | `https://${{RAILWAY_PUBLIC_DOMAIN}}`. |
-| `ROOT_USERNAME` | yes | 3-255 chars, `[\w\s-]` only. |
-| `ROOT_USER_EMAIL` | yes | Validated `email:rfc,dns` — the domain must resolve. `example.com` is rejected. |
-| `ROOT_USER_PASSWORD` | yes | Mixed case, a digit, a symbol, and not in HaveIBeenPwned. A failing value silently skips account creation. |
 | `DB_*` | yes | `${{Postgres.PGHOST}}` etc. The defaults point at upstream's compose hostnames. |
 | `REDIS_HOST` / `_PORT` / `_PASSWORD` | yes | Reference the Redis service. Do **not** also set `REDIS_URL`. |
 | `PUSHER_APP_ID` / `_KEY` / `_SECRET` | yes | Random strings; must match the realtime service. |

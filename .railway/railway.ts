@@ -7,9 +7,11 @@
 //   export PUSHER_APP_ID=$(openssl rand -hex 16)
 //   export PUSHER_APP_KEY=$(openssl rand -hex 16)
 //   export PUSHER_APP_SECRET=$(openssl rand -hex 16)
-//   export ROOT_USERNAME="Your Name" ROOT_USER_EMAIL="you@resolvable.tld" ROOT_USER_PASSWORD='...'
 //
 // Never rotate APP_KEY: it encrypts every registered server's SSH key.
+//
+// The root account is created through the register page on first visit, not
+// from variables, so none are declared for it.
 
 import {
   defineRailway,
@@ -72,10 +74,6 @@ export default defineRailway(() => {
       APP_NAME: "Coolify",
       APP_KEY: fromEnvOrPreserve("APP_KEY"),
       APP_URL: "https://${{RAILWAY_PUBLIC_DOMAIN}}",
-
-      ROOT_USERNAME: fromEnvOrPreserve("ROOT_USERNAME"),
-      ROOT_USER_EMAIL: fromEnvOrPreserve("ROOT_USER_EMAIL"),
-      ROOT_USER_PASSWORD: fromEnvOrPreserve("ROOT_USER_PASSWORD"),
 
       DB_HOST: db.env.PGHOST,
       DB_PORT: db.env.PGPORT,
