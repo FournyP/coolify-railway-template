@@ -47,7 +47,7 @@ Strings like `docker run -v /var/run/docker.sock:/var/run/docker.sock ...` in th
 ## ✨ Features
 
 - The complete Coolify UI, API, backups and notifications.
-- Live deployment logs and the in-browser terminal, on a single public domain.
+- Live deployment logs, on a single public domain.
 - Stateless — no volume. SSH keys are re-materialised from Postgres on every boot.
 - Pinned images (`coolify:4.3.17`, `coolify-realtime:1.0.18`).
 
@@ -135,6 +135,12 @@ Replicas stay at 1 and app sleeping stays off: Horizon and the scheduler must ke
 Upstream fronts Coolify with Traefik and routes `PathPrefix(/app)` to `coolify-realtime:6001` and `PathPrefix(/terminal/ws)` to `:6002` on the dashboard's own host. Railway gives one public port per service, so that routing moves into the nginx already inside the image — same paths, same host, so the frontend's fallbacks produce the right URLs with no code change.
 
 `coolify/entrypoint.d/05-railway-realtime-proxy.sh` renders the config at start. The `05-` prefix matters: the base image's `10-init-webserver-config.sh` only renders its own template if `http.conf` does not exist. The upstream goes through an nginx *variable* so it re-resolves — otherwise redeploying realtime silently kills the log stream.
+
+## ⚠️ The in-browser terminal does not work
+
+Everything else does; this one feature cannot. The terminal server runs `ssh -i /var/www/html/storage/app/ssh/keys/ssh_key@<uuid>` inside the **realtime** container, and that path is hardcoded. Coolify writes those keys into its **own** container, from Postgres, on every boot. Upstream's compose shares the directory between the two; a Railway volume attaches to one service only, so the realtime container never sees the key and a session cannot open.
+
+Use `ssh` from your own machine instead. Deployments, logs and everything else are unaffected.
 
 ## ⚠️ The `localhost` server is permanently unreachable
 
