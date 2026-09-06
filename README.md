@@ -116,6 +116,7 @@ Three things `railway.ts` deliberately leaves alone, all because the CLI does no
 | `SOKETI_DEFAULT_APP_ID` / `_KEY` / `_SECRET` | yes | `${{Coolify.PUSHER_APP_ID}}` etc. |
 | `APP_NAME` / `SOKETI_DEBUG` | no | `Coolify`, `false`. |
 | `SOKETI_HOST` | no | `::` in the Dockerfile; Railway's private network is IPv6. |
+| `PORT` | yes | `6001`. Railway probes this port for the healthcheck; soketi listens on it, and the terminal server's `6002` is hardcoded upstream. |
 
 ### Service settings
 
@@ -124,7 +125,7 @@ Three things `railway.ts` deliberately leaves alone, all because the CLI does no
 | Root directory | `coolify` | `realtime` |
 | Builder | `DOCKERFILE` | `DOCKERFILE` |
 | Target port | `8080` | — |
-| Healthcheck | `/api/health` | — |
+| Healthcheck | `/api/health` | `/ready` |
 | Replicas | `1` | `1` |
 
 Replicas stay at 1 and app sleeping stays off: Horizon and the scheduler must keep running, and a second replica would run every scheduled job twice.

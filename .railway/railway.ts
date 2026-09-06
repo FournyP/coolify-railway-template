@@ -47,9 +47,19 @@ export default defineRailway(() => {
     // Each service builds from its own directory; there is no root Dockerfile.
     source: github(REPO, { branch: "main", rootDirectory: "realtime" }),
     build: { builder: "DOCKERFILE", dockerfilePath: "Dockerfile" },
-    deploy: { numReplicas: 1 },
+    deploy: {
+      numReplicas: 1,
+      // Answered on both 6001 and 6002, so the probe is correct whichever
+      // Railway targets.
+      healthcheckPath: "/ready",
+    },
     env: {
       APP_NAME: "Coolify",
+
+      // Railway healthchecks probe the port named by PORT, and soketi listens
+      // on 6001, not on PORT. Without this the probe hits the wrong port and
+      // the deploy fails. The terminal server's 6002 is hardcoded upstream.
+      PORT: "6001",
       SOKETI_DEBUG: "false",
       SOKETI_DEFAULT_APP_ID: fromEnvOrPreserve("PUSHER_APP_ID"),
       SOKETI_DEFAULT_APP_KEY: fromEnvOrPreserve("PUSHER_APP_KEY"),
