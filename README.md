@@ -2,7 +2,7 @@
 
 Run the [Coolify](https://coolify.io) control plane on Railway: the full web UI, driving deployments on **your own remote servers** over SSH.
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/coolify?referralCode=C3Uv6n&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/coolify-1?referralCode=C3Uv6n&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ## 🏗️ Architecture
 
