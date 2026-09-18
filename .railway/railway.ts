@@ -79,6 +79,10 @@ export default defineRailway(() => {
       numReplicas: 1,
     },
     env: {
+      // nginx inside the image listens on 8080. Pinned so Railway's healthcheck
+      // and the domain's target port cannot land on a different port.
+      PORT: "8080",
+
       APP_ENV: "production",
       APP_DEBUG: "false",
       APP_NAME: "Coolify",

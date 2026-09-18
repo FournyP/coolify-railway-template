@@ -3,6 +3,14 @@
 Notable changes to this template. Entries are named after the Coolify version they ship,
 and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Pinned port — 2026-09-18
+
+### Fixed
+
+- `railway.ts` pins `PORT` to `8080` on the Coolify service. Railway injects a random `PORT` when the
+  variable is unset, so a service created by hand with an explicit domain target port
+  could listen on one port while the edge dialled another.
+
 ## Coolify 4.3.17 — 2026-09-06
 
 Ships Coolify 4.3.17 and coolify-realtime 1.0.18.
