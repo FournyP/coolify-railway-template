@@ -3,7 +3,8 @@
 #
 # https://github.com/coollabsio/coolify/tree/main/docker/coolify-realtime
 
-# Keep in sync with "realtime" in https://cdn.coollabs.io/coolify/versions.json
+# Keep in sync with the coolify-realtime tag in upstream's docker-compose.prod.yml
+# for the pinned Coolify release, not versions.json, which lags behind it.
 ARG REALTIME_VERSION=1.0.18
 
 FROM coollabsio/coolify-realtime:${REALTIME_VERSION}

@@ -17,7 +17,7 @@
   ],
   "packageRules": [
     {
-      "description": "Must match the realtime version in https://cdn.coollabs.io/coolify/versions.json, not the newest tag. Bump it by hand alongside Coolify.",
+      "description": "Must match the coolify-realtime tag in upstream's docker-compose.prod.yml for the pinned Coolify release, not the newest tag. Bump it by hand alongside Coolify.",
       "matchPackageNames": [
         "coollabsio/coolify-realtime"
       ],

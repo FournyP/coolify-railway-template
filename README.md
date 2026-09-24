@@ -56,7 +56,7 @@ Strings like `docker run -v /var/run/docker.sock:/var/run/docker.sock ...` in th
 1. Click **Deploy on Railway**.
 2. Deploy. First boot runs migrations and seeders; a couple of restarts while Postgres and Redis come up is normal.
 3. Open the public domain and create the root account. **Do this as soon as the deploy goes live** — registration is open until the first account exists, and that account owns the instance.
-4. Set the instance FQDN in **Settings** to your Railway domain.
+4. Set the instance FQDN in **Settings** to your Railway domain, before adding any server. Each server stores its Sentinel URL when it is created, and Sentinel is mandatory since Coolify 4.3.19; a server added earlier needs its Sentinel URL set to `https://<your-domain>` in its settings.
 5. **Keys & Tokens** → add your SSH key, **Servers** → add the server, validate it.
 6. Deploy a project. The build runs on your server, not on Railway.
 
@@ -161,7 +161,7 @@ This instance holds the SSH keys to every server you register, behind one passwo
 
 Railway template updates are opt-in — an existing deployment keeps running until you apply the update. See the [changelog](CHANGELOG.md) for what each update contains.
 
-To move to a newer Coolify, bump `COOLIFY_VERSION` in `coolify/Dockerfile` (and `REALTIME_VERSION` to the matching `realtime` value in [versions.json](https://cdn.coollabs.io/coolify/versions.json)) and redeploy. Migrations run at boot. Only released versions get a bare semver tag on Docker Hub.
+To move to a newer Coolify, bump `COOLIFY_VERSION` in `coolify/Dockerfile` (and `REALTIME_VERSION` to the `coolify-realtime` tag in that release's [`docker-compose.prod.yml`](https://github.com/coollabsio/coolify/blob/main/docker-compose.prod.yml); `versions.json` lags behind it) and redeploy. Migrations run at boot. Only released versions get a bare semver tag on Docker Hub.
 
 ## 🧪 Run locally
 

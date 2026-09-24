@@ -9,8 +9,19 @@ Ships Coolify 4.3.23 and coolify-realtime 1.0.18.
 
 ### Changed
 
-- `COOLIFY_VERSION` bumped from 4.3.17 to 4.3.23. Realtime is unchanged upstream.
-  Migrations run at boot and do not roll back.
+- `COOLIFY_VERSION` bumped from 4.3.17 to 4.3.23. Migrations run at boot and do not roll back.
+- Realtime stays on 1.0.18. Upstream's compose ships 1.0.19, whose only change passes `PATH`
+  to the browser terminal, which cannot work on Railway anyway.
+- The realtime version is now tracked against upstream's `docker-compose.prod.yml` instead of
+  `versions.json`, which lags behind it.
+
+### Before you update
+
+- Sentinel is mandatory on every server since Coolify 4.3.19, and each server stores its
+  Sentinel URL when it is created. A server added before the instance FQDN was set holds
+  `http://<public_ipv4>:8000`, which is unreachable here: set its Sentinel URL to
+  `https://<your-domain>` in the server's settings. Until then it falls back to SSH checks
+  and shows as out of sync.
 
 ## Pinned port — 2026-09-18
 
