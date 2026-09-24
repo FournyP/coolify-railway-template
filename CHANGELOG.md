@@ -3,6 +3,15 @@
 Notable changes to this template. Entries are named after the Coolify version they ship,
 and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Coolify 4.3.23 — 2026-09-25
+
+Ships Coolify 4.3.23 and coolify-realtime 1.0.18.
+
+### Changed
+
+- `COOLIFY_VERSION` bumped from 4.3.17 to 4.3.23. Realtime is unchanged upstream.
+  Migrations run at boot and do not roll back.
+
 ## Pinned port — 2026-09-18
 
 ### Fixed

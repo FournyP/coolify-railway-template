@@ -49,7 +49,7 @@ Strings like `docker run -v /var/run/docker.sock:/var/run/docker.sock ...` in th
 - The complete Coolify UI, API, backups and notifications.
 - Live deployment logs, on a single public domain.
 - Stateless — no volume. SSH keys are re-materialised from Postgres on every boot.
-- Pinned images (`coolify:4.3.17`, `coolify-realtime:1.0.18`).
+- Pinned images (`coolify:4.3.23`, `coolify-realtime:1.0.18`).
 
 ## 💁‍♀️ How to use
 
