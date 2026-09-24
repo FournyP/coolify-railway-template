@@ -130,8 +130,9 @@ jobs:
             -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
             http://localhost:8080/terminal/ws | grep -qF 'Missing required tokens'
 
+          # /register, not /login: with no account yet, /login redirects to it.
           echo "the dashboard is still served by PHP"
-          [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/login)" = 200 ]
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/register)" = 200 ]
 
       - name: Logs on failure
         if: failure()
