@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
       - name: Build ${{ matrix.image }}
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.image }}
           push: false
@@ -38,7 +38,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Build coolify image locally
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: coolify
           push: false
@@ -47,7 +47,7 @@ jobs:
           cache-from: type=gha,scope=coolify
 
       - name: Build realtime image locally
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: realtime
           push: false
