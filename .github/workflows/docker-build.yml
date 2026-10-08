@@ -70,11 +70,15 @@ jobs:
             -e AUTOUPDATE=false \
             coolify:ci
 
+          # Reverb starts only after migrations, while /api/health already
+          # answers, so wait for both like upstream's healthcheck does.
           for i in $(seq 1 90); do
-            curl -fsS http://localhost:8080/api/health >/dev/null 2>&1 && break
+            curl -fsS http://localhost:8080/api/health >/dev/null 2>&1 \
+              && docker exec coolify curl -fsS http://127.0.0.1:6001/up >/dev/null 2>&1 && break
             sleep 2
           done
           curl -fsS http://localhost:8080/api/health >/dev/null
+          docker exec coolify curl -fsS http://127.0.0.1:6001/up >/dev/null
 
       - name: nginx config is valid
         run: docker exec coolify nginx -t
