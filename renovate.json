@@ -14,14 +14,5 @@
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG \\w+=(?<currentValue>\\S+)"
       ]
     }
-  ],
-  "packageRules": [
-    {
-      "description": "Must match the coolify-realtime tag in upstream's docker-compose.prod.yml for the pinned Coolify release, not the newest tag. Bump it by hand alongside Coolify.",
-      "matchPackageNames": [
-        "coollabsio/coolify-realtime"
-      ],
-      "enabled": false
-    }
   ]
 }

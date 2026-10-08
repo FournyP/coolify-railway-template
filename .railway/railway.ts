@@ -25,16 +25,9 @@ import {
 
 const REPO = "FournyP/coolify-railway-template";
 
-// Matched by name, so keep these identical to Railway: a mismatch is a
-// delete and recreate, not a rename.
+// Matched by name, so keep it identical to Railway: a mismatch is a delete
+// and recreate, not a rename.
 const COOLIFY_SERVICE = "Coolify";
-const REALTIME_SERVICE = "Coolify Realtime";
-
-// Literal, not realtime.env.RAILWAY_PRIVATE_DOMAIN: a cross-service reference
-// whose target name contains a space does not round-trip, leaving every plan
-// permanently dirty. The private domain is a slug of the name at creation and
-// survives renames, so the literal is the stabler of the two.
-const REALTIME_PRIVATE_DOMAIN = "coolify-realtime.railway.internal";
 
 /** Push the value from the local environment if present, else keep Railway's. */
 const fromEnvOrPreserve = (name: string) => process.env[name] ?? preserve();
@@ -42,30 +35,6 @@ const fromEnvOrPreserve = (name: string) => process.env[name] ?? preserve();
 export default defineRailway(() => {
   const db = postgres("postgres");
   const cache = redis("redis");
-
-  const realtime = service(REALTIME_SERVICE, {
-    // Each service builds from its own directory; there is no root Dockerfile.
-    source: github(REPO, { branch: "main", rootDirectory: "realtime" }),
-    build: { builder: "DOCKERFILE", dockerfilePath: "Dockerfile" },
-    deploy: {
-      numReplicas: 1,
-      // Answered on both 6001 and 6002, so the probe is correct whichever
-      // Railway targets.
-      healthcheckPath: "/ready",
-    },
-    env: {
-      APP_NAME: "Coolify",
-
-      // Railway healthchecks probe the port named by PORT, and soketi listens
-      // on 6001, not on PORT. Without this the probe hits the wrong port and
-      // the deploy fails. The terminal server's 6002 is hardcoded upstream.
-      PORT: "6001",
-      SOKETI_DEBUG: "false",
-      SOKETI_DEFAULT_APP_ID: fromEnvOrPreserve("PUSHER_APP_ID"),
-      SOKETI_DEFAULT_APP_KEY: fromEnvOrPreserve("PUSHER_APP_KEY"),
-      SOKETI_DEFAULT_APP_SECRET: fromEnvOrPreserve("PUSHER_APP_SECRET"),
-    },
-  });
 
   const coolify = service(COOLIFY_SERVICE, {
     source: github(REPO, { branch: "main", rootDirectory: "coolify" }),
@@ -100,22 +69,15 @@ export default defineRailway(() => {
       REDIS_PORT: cache.env.REDISPORT,
       REDIS_PASSWORD: cache.env.REDIS_PASSWORD,
 
+      // Reverb runs in this container and reads the same credentials. The
+      // backend broadcasts to 127.0.0.1:6001 when PUSHER_BACKEND_HOST is unset.
       PUSHER_APP_ID: fromEnvOrPreserve("PUSHER_APP_ID"),
       PUSHER_APP_KEY: fromEnvOrPreserve("PUSHER_APP_KEY"),
       PUSHER_APP_SECRET: fromEnvOrPreserve("PUSHER_APP_SECRET"),
-
-      // Backend broadcast target. Not PUSHER_HOST, which is browser-facing and
-      // must stay unset.
-      PUSHER_BACKEND_HOST: REALTIME_PRIVATE_DOMAIN,
-      PUSHER_BACKEND_PORT: "6001",
-      PUSHER_SCHEME: "http",
-
-      // Upstream for the nginx websocket locations.
-      REALTIME_HOST: REALTIME_PRIVATE_DOMAIN,
 
       PHP_MEMORY_LIMIT: "512M",
     },
   });
 
-  return project("Coolify", { resources: [db, cache, realtime, coolify] });
+  return project("Coolify", { resources: [db, cache, coolify] });
 });

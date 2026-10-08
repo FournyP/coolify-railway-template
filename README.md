@@ -14,9 +14,11 @@ flowchart LR
         subgraph coolifysvc["coolify · public · target port 8080"]
             nginx["nginx"]
             php["php-fpm + horizon + scheduler"]
+            realtime["reverb :6001<br/>terminal :6002"]
             nginx -- "everything else" --> php
+            nginx -- "/app, /terminal/ws" --> realtime
+            php -- "broadcast" --> realtime
         end
-        realtime["coolify-realtime · private<br/>soketi :6001<br/>terminal :6002"]
         pg[("Postgres")]
         rd[("Redis")]
     end
@@ -27,15 +29,12 @@ flowchart LR
 
     browser -- "https" --> nginx
     browser -. "wss /app<br/>wss /terminal/ws" .-> nginx
-    nginx -- "/app to :6001<br/>/terminal/ws to :6002<br/>private network" --> realtime
     php --> pg
     php --> rd
-    php -- "broadcast :6001" --> realtime
     php == "ssh :22" ==> helper
 ```
 
-- **coolify** — nginx, php-fpm, Horizon and the scheduler in one container under s6-overlay. The only public service.
-- **coolify-realtime** — soketi and the terminal server. Private.
+- **coolify** — nginx, php-fpm, Horizon, the scheduler, Reverb and the terminal server in one container under s6-overlay. The only public service.
 - **Postgres** — all durable state. **Redis** — queues and cache.
 
 ### 🐳 No Docker-in-Docker needed
@@ -49,7 +48,7 @@ Strings like `docker run -v /var/run/docker.sock:/var/run/docker.sock ...` in th
 - The complete Coolify UI, API, backups and notifications.
 - Live deployment logs, on a single public domain.
 - Stateless — no volume. SSH keys are re-materialised from Postgres on every boot.
-- Pinned images (`coolify:4.3.23`, `coolify-realtime:1.0.18`).
+- Pinned image (`coolify:4.4.2`).
 
 ## 💁‍♀️ How to use
 
@@ -99,48 +98,34 @@ Three things `railway.ts` deliberately leaves alone, all because the CLI does no
 | `APP_URL` | yes | `https://${{RAILWAY_PUBLIC_DOMAIN}}`. |
 | `DB_*` | yes | `${{Postgres.PGHOST}}` etc. The defaults point at upstream's compose hostnames. |
 | `REDIS_HOST` / `_PORT` / `_PASSWORD` | yes | Reference the Redis service. Do **not** also set `REDIS_URL`. |
-| `PUSHER_APP_ID` / `_KEY` / `_SECRET` | yes | Random strings; must match the realtime service. |
-| `PUSHER_BACKEND_HOST` / `_PORT` | yes | `coolify-realtime.railway.internal`, `6001`. Where the **backend** pushes events. |
-| `PUSHER_SCHEME` | yes | `http` — private network. |
-| `REALTIME_HOST` | no | Upstream for the nginx websocket locations. |
+| `PUSHER_APP_ID` / `_KEY` / `_SECRET` | yes | Random strings. Reverb, in the same container, reads the same values. |
 | `PHP_MEMORY_LIMIT` | no | `256M` default; `512M` is easier with Horizon. |
 
-**Leave unset:** `PUSHER_HOST`, `PUSHER_PORT`, `TERMINAL_PROTOCOL`, `TERMINAL_HOST`, `TERMINAL_PORT` override the browser-side websocket URL. Unset, the frontend falls back to this host with no port — exactly `wss://<domain>/app` and `wss://<domain>/terminal/ws`, which nginx proxies. `SELF_HOSTED` must stay unset too.
+**Leave unset:** `PUSHER_BACKEND_HOST` — unset, the backend broadcasts to Reverb on `127.0.0.1`. `PUSHER_HOST`, `PUSHER_PORT`, `TERMINAL_PROTOCOL`, `TERMINAL_HOST`, `TERMINAL_PORT` override the browser-side websocket URL. Unset, the frontend falls back to this host with no port — exactly `wss://<domain>/app` and `wss://<domain>/terminal/ws`, which nginx proxies. `SELF_HOSTED` must stay unset too.
 
 **Not variables at all:** `AUTOUPDATE` is defaulted to `false` in `coolify/Dockerfile` — `UpdateCoolify::update()` SSHes into `Server::find(0)` to run `upgrade.sh`, a server that does not exist here, so it fails into Horizon on every cron tick rather than no-opping. `NIGHTWATCH_ENABLED` is read by nothing; the s6 service gates on a `.env` file this container does not have.
 
-### Realtime service
-
-| Variable | Required | Description |
-| --- | --- | --- |
-| `SOKETI_DEFAULT_APP_ID` / `_KEY` / `_SECRET` | yes | `${{Coolify.PUSHER_APP_ID}}` etc. |
-| `APP_NAME` / `SOKETI_DEBUG` | no | `Coolify`, `false`. |
-| `SOKETI_HOST` | no | `::` in the Dockerfile; Railway's private network is IPv6. |
-| `PORT` | yes | `6001`. Railway probes this port for the healthcheck; soketi listens on it, and the terminal server's `6002` is hardcoded upstream. |
-
 ### Service settings
 
-| | coolify | coolify-realtime |
-| --- | --- | --- |
-| Root directory | `coolify` | `realtime` |
-| Builder | `DOCKERFILE` | `DOCKERFILE` |
-| Target port | `8080` | — |
-| Healthcheck | `/api/health` | `/ready` |
-| Replicas | `1` | `1` |
+| | coolify |
+| --- | --- |
+| Root directory | `coolify` |
+| Builder | `DOCKERFILE` |
+| Target port | `8080` |
+| Healthcheck | `/api/health` |
+| Replicas | `1` |
 
 Replicas stay at 1 and app sleeping stays off: Horizon and the scheduler must keep running, and a second replica would run every scheduled job twice.
 
 ## 🔌 Why the websockets go through nginx
 
-Upstream fronts Coolify with Traefik and routes `PathPrefix(/app)` to `coolify-realtime:6001` and `PathPrefix(/terminal/ws)` to `:6002` on the dashboard's own host. Railway gives one public port per service, so that routing moves into the nginx already inside the image — same paths, same host, so the frontend's fallbacks produce the right URLs with no code change.
+Upstream fronts Coolify with Traefik and routes `PathPrefix(/app)` to `:6001` and `PathPrefix(/terminal/ws)` to `:6002` on the dashboard's own host. Railway gives one public port per service, so that routing moves into the nginx already inside the image — same paths, same host, so the frontend's fallbacks produce the right URLs with no code change.
 
-`coolify/entrypoint.d/05-railway-realtime-proxy.sh` renders the config at start. The `05-` prefix matters: the base image's `10-init-webserver-config.sh` only renders its own template if `http.conf` does not exist. The upstream goes through an nginx *variable* so it re-resolves — otherwise redeploying realtime silently kills the log stream.
+`coolify/etc/nginx/site-opts.d/http.conf` replaces upstream's file of the same name: upstream's config verbatim plus the two websocket locations, both proxying to `127.0.0.1`.
 
-## ⚠️ The in-browser terminal does not work
+## 🖥️ The in-browser terminal
 
-Everything else does; this one feature cannot. The terminal server runs `ssh -i /var/www/html/storage/app/ssh/keys/ssh_key@<uuid>` inside the **realtime** container, and that path is hardcoded. Coolify writes those keys into its **own** container, from Postgres, on every boot. Upstream's compose shares the directory between the two; a Railway volume attaches to one service only, so the realtime container never sees the key and a session cannot open.
-
-Use `ssh` from your own machine instead. Deployments, logs and everything else are unaffected.
+Before Coolify 4.4 the terminal server ran in a separate realtime service that could not see the SSH keys, so the terminal never opened on Railway. It now runs in the coolify container, next to the keys Coolify writes from Postgres on every boot.
 
 ## ⚠️ The `localhost` server is permanently unreachable
 
@@ -161,23 +146,22 @@ This instance holds the SSH keys to every server you register, behind one passwo
 
 Railway template updates are opt-in — an existing deployment keeps running until you apply the update. See the [changelog](CHANGELOG.md) for what each update contains.
 
-To move to a newer Coolify, bump `COOLIFY_VERSION` in `coolify/Dockerfile` (and `REALTIME_VERSION` to the `coolify-realtime` tag in that release's [`docker-compose.prod.yml`](https://github.com/coollabsio/coolify/blob/main/docker-compose.prod.yml); `versions.json` lags behind it) and redeploy. Migrations run at boot. Only released versions get a bare semver tag on Docker Hub.
+To move to a newer Coolify, bump `COOLIFY_VERSION` in `coolify/Dockerfile` and redeploy. Migrations run at boot. Only released versions get a bare semver tag on Docker Hub.
 
 ## 🧪 Run locally
 
 ```bash
 docker build -t coolify-railway coolify/
-docker build -t coolify-realtime-railway realtime/
 ```
 
-Run both with a Postgres and a Redis, `REALTIME_HOST` pointing at the realtime container, then:
+Run it with a Postgres and a Redis, then:
 
 ```bash
 curl -fsS localhost:8080/api/health
 docker exec <coolify> nginx -T | grep -A3 'location /app'
 ```
 
-The second should show the resolver and hostname substituted while `$http_upgrade` is still a literal nginx variable. Test websockets with `curl --http1.1` — over HTTP/2 the upgrade headers are illegal and you get a misleading 502.
+The second should show `proxy_pass http://127.0.0.1:6001;`. Test websockets with `curl --http1.1` — over HTTP/2 the upgrade headers are illegal and you get a misleading 502.
 
 ## 📝 Notes
 

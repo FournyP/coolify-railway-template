@@ -3,6 +3,32 @@
 Notable changes to this template. Entries are named after the Coolify version they ship,
 and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Coolify 4.4.2 — 2026-10-08
+
+Ships Coolify 4.4.2. The realtime service is gone.
+
+### Changed
+
+- `COOLIFY_VERSION` bumped from 4.3.23 to 4.4.2. Migrations run at boot and do not roll back.
+- Realtime now runs inside the Coolify container: Laravel Reverb on `:6001` and the terminal
+  server on `:6002`, as upstream does since 4.4. The `realtime/` image and the
+  Coolify Realtime service are removed.
+- nginx proxies `/app` and `/terminal/ws` to `127.0.0.1`. The config is a static file that
+  replaces upstream's `http.conf`, so the start-time render script is gone.
+
+### Removed
+
+- `REALTIME_HOST`, `PUSHER_BACKEND_HOST` and `PUSHER_SCHEME` on the Coolify service.
+
+### Before you update
+
+- Back up the Coolify Postgres database first: migrations do not roll back.
+- Remove `PUSHER_BACKEND_HOST`, `REALTIME_HOST` and `PUSHER_SCHEME` from the Coolify service
+  before deploying. Left in place, the backend keeps broadcasting to the old realtime service.
+- Once the new deploy is healthy, delete the Coolify Realtime service.
+- Each account now links to one OAuth provider, and some applications switch to consistent
+  container naming. See the [4.4.0 release notes](https://github.com/coollabsio/coolify/releases/tag/v4.4.0).
+
 ## Coolify 4.3.23 — 2026-09-25
 
 Ships Coolify 4.3.23 and coolify-realtime 1.0.18.
