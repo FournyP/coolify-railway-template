@@ -3,6 +3,15 @@
 Notable changes to this template. Entries are named after the Coolify version they ship,
 and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Coolify 4.4.6 — 2026-10-10
+
+Ships Coolify 4.4.6.
+
+### Changed
+
+- `COOLIFY_VERSION` bumped from 4.4.2 to 4.4.6. Migrations run at boot and do not roll back.
+  4.4.4 and 4.4.5 are skipped: 4.4.6 fixes their self-hosted startup failure.
+
 ## Coolify 4.4.2 — 2026-10-08
 
 Ships Coolify 4.4.2. The realtime service is gone.
