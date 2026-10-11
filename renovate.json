@@ -29,11 +29,11 @@
   ],
   "packageRules": [
     {
-      "description": "Coolify minor and patch releases merge on their own once CI passes. The release must be at least 3 days old: upstream has shipped patch releases that broke self-hosted startup and fixed them within a day.",
+      "description": "Coolify minor and patch releases merge on their own once CI passes. The release must be at least 1 day old: upstream has shipped patch releases that broke self-hosted startup and fixed them within the hour.",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["coollabsio/coolify"],
       "matchUpdateTypes": ["minor", "patch"],
-      "minimumReleaseAge": "3 days",
+      "minimumReleaseAge": "1 day",
       "automerge": true
     },
     {

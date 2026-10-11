@@ -146,7 +146,7 @@ This instance holds the SSH keys to every server you register, behind one passwo
 
 Coolify's own **Update** button cannot work here. `UpdateCoolify` SSHes into server 0 (`localhost`) and runs `upgrade.sh`, which is a `docker compose pull` against a Docker daemon this service does not have. `AUTOUPDATE` is `false` for the same reason.
 
-Renovate does the job instead. It watches `coollabsio/coolify` on Docker Hub and, for a minor or patch release at least 3 days old, opens a PR that bumps `COOLIFY_VERSION` in `coolify/Dockerfile` and the pinned version above. CI builds the image and checks the websocket routing, the PR merges itself, and Railway deploys `main`. The 3-day wait skips releases upstream fixes within a day, as happened with 4.4.4 and 4.4.5.
+Renovate does the job instead. It watches `coollabsio/coolify` on Docker Hub and, for a minor or patch release at least 1 day old, opens a PR that bumps `COOLIFY_VERSION` in `coolify/Dockerfile` and the pinned version above. CI builds the image and checks the websocket routing, the PR merges itself, and Railway deploys `main`. The 1-day wait skips releases upstream fixes within hours, as happened with 4.4.4 and 4.4.5.
 
 Major releases still need a human: they tend to change the compose topology this image replicates. Migrations run at boot and do not roll back, so back up Postgres before a minor bump. Only released versions get a bare semver tag on Docker Hub.
 

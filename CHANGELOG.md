@@ -10,7 +10,7 @@ automatically through Renovate and get no entry of their own; see the
 ### Changed
 
 - Coolify minor and patch releases are merged by Renovate once CI passes and the release is
-  at least 3 days old. Major releases still open a PR for review. The in-app **Update** button
+  at least 1 day old. Major releases still open a PR for review. The in-app **Update** button
   cannot work on Railway; the README explains why.
 
 ## Coolify 4.4.6 — 2026-10-10
