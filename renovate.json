@@ -1,18 +1,37 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ],
+  "extends": ["config:recommended"],
   "customManagers": [
     {
       "customType": "regex",
       "description": "Version pins held in a Dockerfile ARG, annotated with a `# renovate:` comment on the line above.",
-      "managerFilePatterns": [
-        "/(^|/)Dockerfile$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG \\w+=(?<currentValue>\\S+)"
-      ]
+      "managerFilePatterns": ["/(^|/)Dockerfile$/"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG \\w+=(?<currentValue>\\S+)"]
+    },
+    {
+      "customType": "regex",
+      "description": "Pinned Coolify version quoted in the README.",
+      "managerFilePatterns": ["/^README\\.md$/"],
+      "matchStrings": ["Pinned image \\(`coolify:(?<currentValue>\\d+\\.\\d+\\.\\d+)`\\)"],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "coollabsio/coolify"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Coolify minor and patch bumps automerge once CI passes and the release is 1 day old (4.4.4 and 4.4.5 were hotfixed within the hour).",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["coollabsio/coolify"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "minimumReleaseAge": "1 day",
+      "automerge": true
+    },
+    {
+      "description": "Major Coolify releases need a human.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["coollabsio/coolify"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false
     }
   ]
 }

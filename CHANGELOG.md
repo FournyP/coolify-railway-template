@@ -1,7 +1,15 @@
 # Changelog
 
-Notable changes to this template. Entries are named after the Coolify version they ship,
-and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Notable changes to this template, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Entries are named after the Coolify version they ship. Renovate-merged Coolify bumps get no entry;
+see the [upstream releases](https://github.com/coollabsio/coolify/releases).
+
+## Unreleased
+
+### Changed
+
+- Renovate merges Coolify minor and patch bumps once CI passes and the release is 1 day old.
+  Major bumps stay manual.
 
 ## Coolify 4.4.6 — 2026-10-10
 
