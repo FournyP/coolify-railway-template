@@ -144,9 +144,13 @@ This instance holds the SSH keys to every server you register, behind one passwo
 
 ## ⬆️ Upgrading
 
-Railway template updates are opt-in — an existing deployment keeps running until you apply the update. See the [changelog](CHANGELOG.md) for what each update contains.
+Coolify's own **Update** button cannot work here. `UpdateCoolify` SSHes into server 0 (`localhost`) and runs `upgrade.sh`, which is a `docker compose pull` against a Docker daemon this service does not have. `AUTOUPDATE` is `false` for the same reason.
 
-To move to a newer Coolify, bump `COOLIFY_VERSION` in `coolify/Dockerfile` and redeploy. Migrations run at boot. Only released versions get a bare semver tag on Docker Hub.
+Renovate does the job instead. It watches `coollabsio/coolify` on Docker Hub and, for a minor or patch release at least 3 days old, opens a PR that bumps `COOLIFY_VERSION` in `coolify/Dockerfile` and the pinned version above. CI builds the image and checks the websocket routing, the PR merges itself, and Railway deploys `main`. The 3-day wait skips releases upstream fixes within a day, as happened with 4.4.4 and 4.4.5.
+
+Major releases still need a human: they tend to change the compose topology this image replicates. Migrations run at boot and do not roll back, so back up Postgres before a minor bump. Only released versions get a bare semver tag on Docker Hub.
+
+Railway template updates are opt-in — an existing deployment keeps running until you apply the update. See the [changelog](CHANGELOG.md) for what each template update contains.
 
 ## 🧪 Run locally
 

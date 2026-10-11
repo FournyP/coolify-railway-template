@@ -13,6 +13,35 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG \\w+=(?<currentValue>\\S+)"
       ]
+    },
+    {
+      "customType": "regex",
+      "description": "The pinned Coolify version quoted in the README, kept in step with coolify/Dockerfile.",
+      "managerFilePatterns": [
+        "/^README\\.md$/"
+      ],
+      "matchStrings": [
+        "Pinned image \\(`coolify:(?<currentValue>\\d+\\.\\d+\\.\\d+)`\\)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "coollabsio/coolify"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Coolify minor and patch releases merge on their own once CI passes. The release must be at least 3 days old: upstream has shipped patch releases that broke self-hosted startup and fixed them within a day.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["coollabsio/coolify"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "minimumReleaseAge": "3 days",
+      "automerge": true
+    },
+    {
+      "description": "Major Coolify releases change the compose topology this image replicates and need a human.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["coollabsio/coolify"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false
     }
   ]
 }
