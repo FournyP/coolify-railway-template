@@ -1,17 +1,15 @@
 # Changelog
 
 Notable changes to this template, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Entries are named after the Coolify version they ship. Coolify minor and patch bumps merge
-automatically through Renovate and get no entry of their own; see the
-[upstream releases](https://github.com/coollabsio/coolify/releases) for those.
+Entries are named after the Coolify version they ship. Renovate-merged Coolify bumps get no entry;
+see the [upstream releases](https://github.com/coollabsio/coolify/releases).
 
 ## Unreleased
 
 ### Changed
 
-- Coolify minor and patch releases are merged by Renovate once CI passes and the release is
-  at least 1 day old. Major releases still open a PR for review. The in-app **Update** button
-  cannot work on Railway; the README explains why.
+- Renovate merges Coolify minor and patch bumps once CI passes and the release is 1 day old.
+  Major bumps stay manual.
 
 ## Coolify 4.4.6 — 2026-10-10
 

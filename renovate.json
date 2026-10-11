@@ -1,35 +1,25 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ],
+  "extends": ["config:recommended"],
   "customManagers": [
     {
       "customType": "regex",
       "description": "Version pins held in a Dockerfile ARG, annotated with a `# renovate:` comment on the line above.",
-      "managerFilePatterns": [
-        "/(^|/)Dockerfile$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG \\w+=(?<currentValue>\\S+)"
-      ]
+      "managerFilePatterns": ["/(^|/)Dockerfile$/"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG \\w+=(?<currentValue>\\S+)"]
     },
     {
       "customType": "regex",
-      "description": "The pinned Coolify version quoted in the README, kept in step with coolify/Dockerfile.",
-      "managerFilePatterns": [
-        "/^README\\.md$/"
-      ],
-      "matchStrings": [
-        "Pinned image \\(`coolify:(?<currentValue>\\d+\\.\\d+\\.\\d+)`\\)"
-      ],
+      "description": "Pinned Coolify version quoted in the README.",
+      "managerFilePatterns": ["/^README\\.md$/"],
+      "matchStrings": ["Pinned image \\(`coolify:(?<currentValue>\\d+\\.\\d+\\.\\d+)`\\)"],
       "datasourceTemplate": "docker",
       "depNameTemplate": "coollabsio/coolify"
     }
   ],
   "packageRules": [
     {
-      "description": "Coolify minor and patch releases merge on their own once CI passes. The release must be at least 1 day old: upstream has shipped patch releases that broke self-hosted startup and fixed them within the hour.",
+      "description": "Coolify minor and patch bumps automerge once CI passes and the release is 1 day old (4.4.4 and 4.4.5 were hotfixed within the hour).",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["coollabsio/coolify"],
       "matchUpdateTypes": ["minor", "patch"],
@@ -37,7 +27,7 @@
       "automerge": true
     },
     {
-      "description": "Major Coolify releases change the compose topology this image replicates and need a human.",
+      "description": "Major Coolify releases need a human.",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["coollabsio/coolify"],
       "matchUpdateTypes": ["major"],
