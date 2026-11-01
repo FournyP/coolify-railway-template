@@ -20,6 +20,19 @@
   ],
   "packageRules": [
     {
+      "description": "Minor and patch updates automerge once every check passes. ghcr.io publishes no release timestamps, so those are not held forever.",
+      "matchUpdateTypes": ["minor", "patch"],
+      "minimumReleaseAge": "1 day",
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
+      "automerge": true
+    },
+    {
+      "description": "Exception: on 0.x a minor bump can break, so it needs a human.",
+      "matchUpdateTypes": ["minor"],
+      "matchCurrentVersion": "/^v?0\\./",
+      "automerge": false
+    },
+    {
       "description": "Coolify minor and patch bumps automerge once CI passes and the release is 1 day old (4.4.4 and 4.4.5 were hotfixed within the hour).",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["coollabsio/coolify"],
