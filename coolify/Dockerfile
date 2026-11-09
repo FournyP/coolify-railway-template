@@ -12,7 +12,7 @@
 # https://github.com/coollabsio/coolify
 
 # https://hub.docker.com/r/coollabsio/coolify/tags - released versions only.
-ARG COOLIFY_VERSION=4.6.0
+ARG COOLIFY_VERSION=4.7.3
 
 FROM coollabsio/coolify:${COOLIFY_VERSION}
 
